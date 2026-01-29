@@ -10,9 +10,7 @@ from tkinter import Tk, filedialog
 import os
 import sys
 
-# -----------------------------
-# FILE DIALOG
-# -----------------------------
+
 Tk().withdraw()
 image_path = filedialog.askopenfilename(
     title="Select Image for Forgery Detection",
@@ -24,20 +22,18 @@ if not image_path or not os.path.exists(image_path):
 
 print(f"Selected Image: {image_path}")
 
-# -----------------------------
-# LOAD IMAGE
-# -----------------------------
+
 img = cv2.imread(image_path)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-# -----------------------------
+
 # EDGE DETECTION
-# -----------------------------
+
 edges_canny = cv2.Canny(gray, 100, 200)
 
-# -----------------------------
+
 # ERROR LEVEL ANALYSIS (ELA)
-# -----------------------------
+
 def perform_ela(image_path, quality=90):
     original = Image.open(image_path).convert("RGB")
     temp_path = "temp_ela.jpg"
@@ -50,9 +46,9 @@ def perform_ela(image_path, quality=90):
 ela_img = perform_ela(image_path)
 ela_mean = np.mean(ela_img)
 
-# -----------------------------
+
 # COPY-MOVE DETECTION (ORB)
-# -----------------------------
+
 orb = cv2.ORB_create(nfeatures=5000)
 kp, des = orb.detectAndCompute(gray, None)
 
@@ -62,15 +58,15 @@ if des is not None:
     matches = bf.match(des, des)
     copy_move_score = len(matches)
 
-# -----------------------------
+
 # NOISE ANALYSIS (LBP)
-# -----------------------------
+
 lbp = local_binary_pattern(gray, P=8, R=1, method="uniform")
 noise_variance = np.var(lbp)
 
-# -----------------------------
+
 # CNN FORGERY CLASSIFIER
-# -----------------------------
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 model = models.efficientnet_b0(weights="IMAGENET1K_V1")
@@ -98,9 +94,9 @@ with torch.no_grad():
     probs = torch.softmax(output, dim=1)
     fake_prob = probs[0][1].item()
 
-# =====================================================
+
 # FORGERY TYPE IDENTIFICATION (NEW FEATURE)
-# =====================================================
+
 forgery_types = []
 evidence = []
 
@@ -124,9 +120,9 @@ if fake_prob > 0.6:
     forgery_types.append("AI / Deepfake Manipulation")
     evidence.append(f"CNN fake confidence: {fake_prob:.2f}")
 
-# -----------------------------
+
 # FINAL REPORT
-# -----------------------------
+
 print("\n--- FORGERY ANALYSIS REPORT ---")
 print(f"Deep Learning Fake Probability : {fake_prob:.2f}")
 print(f"Copy-Move Match Score          : {copy_move_score}")
@@ -145,9 +141,9 @@ if forgery_types:
 else:
     print("\n✅ RESULT: LIKELY AUTHENTIC IMAGE")
 
-# -----------------------------
+
 # VISUAL OUTPUT
-# -----------------------------
+
 plt.figure(figsize=(15,5))
 
 plt.subplot(1,3,1)
